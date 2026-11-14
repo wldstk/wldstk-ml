@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+
+# coverage
+.coverage
+coverage.xml
+htmlcov/
+
+.ipynb_checkpoints/
+
+# data (keep folder structure only)
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
