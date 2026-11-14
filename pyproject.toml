@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wldstk-ml"
+version = "0.1.0"
+description = "Basic machine-learning project built on numpy and pandas."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=3.0",
+    "tqdm",
+    "matplotlib"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0",
+    "coverage[toml]>=7.6",
+    "isort>=5.13",
+    "pyright>=1.1.380",
+    "pylint>=3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"wldstk_ml.datasets" = ["data/*.csv"]
+
+[tool.pylint.basic]
+# Defaults plus the usual ML names: X for features, y for targets, Z for scaled data.
+good-names = ["i", "j", "k", "ex", "Run", "_", "X", "y", "Z"]
+
+[tool.pylint.design]
+# Estimators such as KMeans and DBSCAN expose a single `predict` method.
+min-public-methods = 1
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["src", "tests"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+
+[tool.coverage.run]
+source = ["wldstk_ml"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 1
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+# fail_under = 80   # enable to make `make coverage` fail below this percentage
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
