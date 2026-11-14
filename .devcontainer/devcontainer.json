@@ -1,0 +1,27 @@
+{
+  "name": "WLDSTK-ML",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "oderwat.indent-rainbow",
+        "mechatroner.rainbow-json",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}
