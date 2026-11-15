@@ -1,11 +1,4 @@
-"""Feature scalers. Every scaler maps each feature with z = (x - offset) / scale.
-
-| Scaler         | offset         | scale                   | Result                         |
-|----------------|----------------|-------------------------|--------------------------------|
-| StandardScaler | mean           | standard deviation      | mean 0, std 1                  |
-| MinMaxScaler   | min (shifted)  | (max - min) / (b - a)   | values in [a, b]               |
-| RobustScaler   | median         | interquartile range     | median 0, IQR 1; robust to outliers |
-"""
+"""Basic set of scalers: StandardScaler, MinMaxScaler, RobustScaler"""
 
 from abc import ABC, abstractmethod
 from typing import Self
@@ -16,11 +9,7 @@ __all__ = ["MinMaxScaler", "RobustScaler", "Scaler", "StandardScaler"]
 
 
 class Scaler(ABC):
-    """Base class: learns an offset and a scale per feature and applies (x - offset) / scale.
-
-    Subclasses only implement `_statistics`. Features without spread (scale 0) get the
-    scale 1 instead, so they are shifted but never divided by zero.
-    """
+    """Base class for the scaler: Learns an offset + a scale per feature and applies (x - offset) / scale."""
 
     def __init__(self) -> None:
         self._offset: np.ndarray | None = None
@@ -28,39 +17,39 @@ class Scaler(ABC):
 
     @abstractmethod
     def _statistics(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Return (offset, scale) per feature of the float array X."""
+        """Returns (offset, scale) per feature of the float array X."""
 
     @property
     def offset_(self) -> np.ndarray:
-        """Value subtracted from each feature, learned by `fit`."""
+        """Value subtracted from each feature, learned by fit method."""
         if self._offset is None:
             raise ValueError(f"{type(self).__name__} is not fitted yet; call fit first")
         return self._offset
 
     @property
     def scale_(self) -> np.ndarray:
-        """Value each feature is divided by, learned by `fit`."""
+        """Value each feature is divided by, learned by fit method."""
         if self._scale is None:
             raise ValueError(f"{type(self).__name__} is not fitted yet; call fit first")
         return self._scale
 
     def fit(self, X: np.ndarray) -> Self:
-        """Learn offset and scale of each feature and return the scaler itself."""
+        """Learns offset and scale of each feature and return the scaler itself."""
         offset, scale = self._statistics(np.asarray(X, dtype=float))
         self._offset = offset
         self._scale = np.where(scale == 0, 1.0, scale)  # constant features would divide by 0
         return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
-        """Scale X with the statistics learned by `fit`."""
+        """Scales X with the statistics learned by fit method."""
         return (np.asarray(X, dtype=float) - self.offset_) / self.scale_
 
     def inverse_transform(self, Z: np.ndarray) -> np.ndarray:
-        """Undo `transform`: map scaled data back to the original units."""
+        """Undo transformation."""
         return np.asarray(Z, dtype=float) * self.scale_ + self.offset_
 
     def fit_transform(self, X: np.ndarray) -> np.ndarray:
-        """Fit to X and return X scaled."""
+        """Applies the scaling."""
         return self.fit(X).transform(X)
 
 
@@ -69,7 +58,7 @@ class StandardScaler(Scaler):
 
     @property
     def mean_(self) -> np.ndarray:
-        """Mean of each feature, learned by `fit`."""
+        """Mean of each feature, learned by fit method."""
         return self.offset_
 
     def _statistics(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -77,10 +66,11 @@ class StandardScaler(Scaler):
 
 
 class MinMaxScaler(Scaler):
-    """Scales each feature linearly to `feature_range`, (0, 1) by default.
+    """Scales each feature linearly to feature_range, (0, 1) by default.
 
-    z = a + (x - min) * (b - a) / (max - min). Outliers squeeze all other values together,
-    because they become the new min or max. Constant features are mapped to a.
+    z = a + (x - min) * (b - a) / (max - min).
+
+    Outliers squeeze all other values together, because they become the new min or max. Constants to a.
     """
 
     def __init__(self, feature_range: tuple[float, float] = (0.0, 1.0)) -> None:
@@ -114,8 +104,9 @@ class MinMaxScaler(Scaler):
 class RobustScaler(Scaler):
     """Centers each feature on its median and divides by its interquartile range (IQR).
 
-    z = (x - median) / (Q3 - Q1). Median and quartiles ignore extreme values, so a few
-    outliers do not change how the rest of the data is scaled.
+    z = (x - median) / (Q3 - Q1).
+
+    Median and quartiles ignore extreme values, so a few outliers do not change how the rest of the data is scaled.
     """
 
     def __init__(self, quantile_range: tuple[float, float] = (25.0, 75.0)) -> None:
@@ -123,13 +114,13 @@ class RobustScaler(Scaler):
         low, high = quantile_range
         if not 0 <= low < high <= 100:
             raise ValueError(
-                f"quantile_range must satisfy 0 <= q1 < q3 <= 100, got {quantile_range}"
+                f"quantile_range must fulfill_ 0 <= q1 < q3 <= 100. Got {quantile_range} instead."
             )
         self.quantile_range = (float(low), float(high))
 
     @property
     def center_(self) -> np.ndarray:
-        """Median of each feature, learned by `fit`."""
+        """Median of each feature, learned by fit."""
         return self.offset_
 
     def _statistics(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
